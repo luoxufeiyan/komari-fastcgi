@@ -5,6 +5,7 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"net/http/fcgi"
 	"os"
 	"os/signal"
 	"syscall"
@@ -37,6 +38,8 @@ func init() {
 	// 从环境变量获取监听地址
 	listenAddr := GetEnv("KOMARI_LISTEN", "0.0.0.0:25774")
 	ServerCmd.PersistentFlags().StringVarP(&flags.Listen, "listen", "l", listenAddr, "监听地址 [env: KOMARI_LISTEN]")
+	ServerCmd.PersistentFlags().BoolVar(&flags.EnableFCGI, "fcgi", false, "启用 FastCGI 模式")
+	ServerCmd.PersistentFlags().StringVar(&flags.StaticPath, "static-path", "", "静态资源路径")
 	RootCmd.AddCommand(ServerCmd)
 }
 
@@ -61,7 +64,7 @@ func RunServer() {
 		os.Exit(1)
 	}
 
-	server.Init(r)
+	server.Init(r, flags.StaticPath)
 
 	srv := &http.Server{
 		Addr:    flags.Listen,
@@ -76,13 +79,22 @@ func RunServer() {
 
 	log.Printf("Starting server on %s ...", flags.Listen)
 
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if flags.EnableFCGI {
+		log.Println("Server is running in FastCGI mode.")
+		if err := fcgi.Serve(nil, r); err != nil {
 			OnFatal(err)
 			event.Trigger(eventType.ProcessExit, event.M{})
-			log.Fatalf("listen: %s\n", err)
+			log.Fatalf("fcgi.Serve: %s\n", err)
 		}
-	}()
+	} else {
+		go func() {
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				OnFatal(err)
+				event.Trigger(eventType.ProcessExit, event.M{})
+				log.Fatalf("listen: %s\n", err)
+			}
+		}()
+	}
 
 	<-quit
 	OnShutdown()

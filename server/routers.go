@@ -12,7 +12,7 @@ var (
 	AllowCors bool = false
 )
 
-func Init(r *gin.Engine) {
+func Init(r *gin.Engine, staticPath string) {
 
 	event.On(eventType.ConfigUpdated, event.ListenerFunc(func(e event.Event) error {
 		newConf := e.Get("new").(conf.Config)
@@ -37,7 +37,9 @@ func Init(r *gin.Engine) {
 		c.Next()
 	})
 
-	public.Static(r.Group("/"), func(handlers ...gin.HandlerFunc) {
-		r.NoRoute(handlers...)
-	})
+	if staticPath == "" {
+		public.Static(r.Group("/"), func(handlers ...gin.HandlerFunc) {
+			r.NoRoute(handlers...)
+		})
+	}
 }

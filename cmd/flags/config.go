@@ -11,4 +11,6 @@ var (
 	DatabaseName string // MySQL/其他数据库名称
 	ConfigFile   string // 配置文件路径
 	Listen       string
+	EnableFCGI   bool   // 是否启用FastCGI模式
+	StaticPath   string // 静态资源路径
 )
