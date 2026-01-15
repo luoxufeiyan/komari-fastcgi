@@ -111,7 +111,10 @@ func GetDBInstance() *gorm.DB {
 
 func init() {
 	event.On(eventType.SchedulerEvery5Minutes, event.ListenerFunc(func(e event.Event) error {
-		instance.Exec("PRAGMA wal_checkpoint(TRUNCATE);")
+		// 只在 SQLite 模式下执行 WAL checkpoint
+		if flags.DatabaseType == "sqlite" || flags.DatabaseType == "" {
+			instance.Exec("PRAGMA wal_checkpoint(TRUNCATE);")
+		}
 		return nil
 	}))
 }
