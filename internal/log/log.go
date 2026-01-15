@@ -140,14 +140,19 @@ func (h *LogHandler) WithGroup(name string) slog.Handler {
 
 // SetupGlobalLogger 设置全局标准库 log 使用 slog handler
 func SetupGlobalLogger(level slog.Level) {
-	handler := NewHandler(os.Stdout, level)
+	SetupGlobalLoggerWithOutput(os.Stdout, level)
+}
+
+// SetupGlobalLoggerWithOutput 设置全局标准库 log 使用 slog handler，并指定输出目标
+func SetupGlobalLoggerWithOutput(output io.Writer, level slog.Level) {
+	handler := NewHandler(output, level)
 	logger := slog.New(handler)
 
 	// 设置 slog 默认 logger
 	slog.SetDefault(logger)
 
 	// 设置标准库 log 使用 slog
-	stdlog.SetOutput(os.Stdout)
+	stdlog.SetOutput(output)
 	stdlog.SetFlags(0) // 清除默认标志
 	stdlog.SetPrefix("")
 

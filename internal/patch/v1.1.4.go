@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/komari-monitor/komari/internal/conf"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/glebarez/go-sqlite"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +25,7 @@ func v1_1_4_PreMigration() {
 	}
 
 	// 打开 SQLite 数据库
-	db, err := sql.Open("sqlite3", "./data/komari.db")
+	db, err := sql.Open("sqlite", "./data/komari.db")
 	if err != nil {
 		slog.Error("[>1.1.4] Failed to open database file for migration.", slog.Any("error", err))
 		return

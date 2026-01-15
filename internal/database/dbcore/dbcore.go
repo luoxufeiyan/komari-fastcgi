@@ -10,8 +10,8 @@ import (
 	"github.com/komari-monitor/komari/internal/database/models"
 	"github.com/komari-monitor/komari/internal/eventType"
 	logutil "github.com/komari-monitor/komari/internal/log"
+	"github.com/glebarez/sqlite"
 	"gorm.io/driver/mysql"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
