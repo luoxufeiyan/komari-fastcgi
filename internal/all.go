@@ -5,7 +5,6 @@ import (
 	_ "github.com/komari-monitor/komari/internal/api_rpc"
 	_ "github.com/komari-monitor/komari/internal/api_v1"
 	_ "github.com/komari-monitor/komari/internal/client"
-	_ "github.com/komari-monitor/komari/internal/cloudflared"
 	_ "github.com/komari-monitor/komari/internal/common"
 	_ "github.com/komari-monitor/komari/internal/conf"
 	_ "github.com/komari-monitor/komari/internal/database"

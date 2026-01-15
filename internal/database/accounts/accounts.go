@@ -4,14 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/gookit/event"
 	"github.com/komari-monitor/komari/internal/database/dbcore"
 	"github.com/komari-monitor/komari/internal/database/models"
 	"github.com/komari-monitor/komari/internal/eventType"
-	"github.com/komari-monitor/komari/pkg/utils"
 
 	"github.com/google/uuid"
 )
@@ -81,19 +79,12 @@ func DeleteAccountByUsername(username string) (err error) {
 	return nil
 }
 
-// 创建默认管理员账户，使用环境变量 ADMIN_USERNAME 作为用户名，环境变量 ADMIN_PASSWORD 作为密码
+// 创建默认管理员账户
 func CreateDefaultAdminAccount() (username, passwd string, err error) {
 	db := dbcore.GetDBInstance()
 
-	username = os.Getenv("ADMIN_USERNAME")
-	if username == "" {
-		username = "admin"
-	}
-
-	passwd = os.Getenv("ADMIN_PASSWORD")
-	if passwd == "" {
-		passwd = utils.GeneratePassword()
-	}
+	username = "admin"
+	passwd = "admin"
 
 	hashedPassword := hashPasswd(passwd)
 
