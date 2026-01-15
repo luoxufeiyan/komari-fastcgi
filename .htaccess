@@ -1,0 +1,94 @@
+# Komari FastCGI 配置 - 直接运行方式
+# 将编译好的 komari 改名为 index.fcgi 并直接运行
+
+# 启用 FastCGI
+Options +ExecCGI -Indexes
+AddHandler fcgid-script .fcgi
+
+# 设置 index.fcgi 为默认首页
+DirectoryIndex index.fcgi
+
+# ⚠️ 重要：FastCGI 环境变量配置
+# 如果你的主机支持 mod_fcgid，必须使用 FcgidInitialEnv 而不是 SetEnv
+# SetEnv 只对 CGI 有效，对 FastCGI 无效！
+# 
+# 方案 1：使用 FcgidInitialEnv（推荐，适用于 FastCGI）
+# 参考 .htaccess.mysql-example 文件
+#
+# 方案 2：使用 SetEnv（仅适用于 CGI 模式）
+# 如果你的主机不支持 mod_fcgid，可以使用下面的 SetEnv 配置
+
+# SQLite 配置（默认）
+SetEnv KOMARI_DB_TYPE sqlite
+SetEnv KOMARI_DB_FILE ./data/komari.db
+SetEnv KOMARI_CONFIG_FILE ./data/komari.json
+
+# MySQL 配置（如需使用，注释掉上面的 SQLite 配置，取消注释下面的行）
+# SetEnv KOMARI_DB_TYPE mysql
+# SetEnv KOMARI_DB_HOST localhost
+# SetEnv KOMARI_DB_PORT 3306
+# SetEnv KOMARI_DB_USER your_username
+# SetEnv KOMARI_DB_PASS your_password
+# SetEnv KOMARI_DB_NAME your_database
+
+# 将所有请求重定向到 index.fcgi
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # 如果请求的不是真实存在的文件或目录
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # 排除 .well-known 目录（用于 SSL 证书验证）
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    
+    # 将请求转发到 index.fcgi
+    RewriteRule ^(.*)$ index.fcgi [QSA,L]
+</IfModule>
+
+# 防止直接访问敏感文件
+<FilesMatch "^(go\.mod|go\.sum|\.git.*|.*\.go|.*\.sh|build\.bat)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 保护 data 目录和其他敏感目录
+<IfModule mod_rewrite.c>
+    RewriteRule ^data/ - [F,L]
+    RewriteRule ^\.git/ - [F,L]
+    RewriteRule ^internal/ - [F,L]
+    RewriteRule ^cmd/ - [F,L]
+</IfModule>
+
+# 启用 Gzip 压缩（提高性能）
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+</IfModule>
+
+# 浏览器缓存（提高性能）
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# FastCGI 超时设置（可选，根据主机支持情况）
+<IfModule mod_fcgid.c>
+    FcgidIdleTimeout 3600
+    FcgidProcessLifeTime 7200
+    FcgidIOTimeout 600
+    FcgidMaxRequestLen 1073741824
+</IfModule>
